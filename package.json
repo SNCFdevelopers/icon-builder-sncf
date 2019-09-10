@@ -17,7 +17,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "svg": "rimraf dist/assets && svgo -f assets/svg -o dist/assets/svg"
+    "svg": "rimraf bootstrap-sncf && git clone https://github.com/SNCFdevelopers/bootstrap-sncf.git bootstrap-sncf && svgo -f bootstrap-sncf/src/assets/icons -o dist/assets/svg && rimraf bootstrap-sncf"
   },
   "dependencies": {
     "@nestjs/common": "^6.0.0",
