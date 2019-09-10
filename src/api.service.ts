@@ -57,7 +57,7 @@ export class ApiService {
     return;
   };
 
-  async createSvgs(icons, source, dest, size) {
+  async createSvgs(icons, source, dest, size, color) {
     const iconsSrc = icons.map(name => path.join(source, `${name}.svg`));
     const iconsOutput = icons.map(name => path.join(dest, `${name}.svg`));
 
@@ -66,8 +66,8 @@ export class ApiService {
         console.log('Files copied');
         replace({
           files: iconsOutput,
-          from: 'viewBox="0 0 500 500"',
-          to: 'viewBox="0 0 200 200"',
+          from: [/<svg/g, /fill="#0088ce"/g],
+          to: [`<svg width="${size}" height="${size}"`, `fill="${color}"`],
         })
           .then(results => {
             console.log('Replacement results:', results);

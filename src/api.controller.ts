@@ -16,6 +16,7 @@ const BODY = {
   png: true,
   svg: true,
   size: 200,
+  color: '#3cff00',
 };
 
 @Controller('api')
@@ -29,7 +30,7 @@ export class ApiController {
     @Res() res: Response,
   ) {
     const params = BODY;
-    const { icons, font, png, svg, size } = params;
+    const { icons, font, png, svg, size, color } = params;
 
     if (!icons) {
       return;
@@ -58,7 +59,7 @@ export class ApiController {
 
     if (svg) {
       this.apiService.createDirectory([path.join(destPath, 'svg')]);
-      await this.apiService.createSvgs(icons, svgPath, path.join(destPath, 'svg'), size);
+      await this.apiService.createSvgs(icons, svgPath, path.join(destPath, 'svg'), size, color);
     }
 
     const stream = fs.createWriteStream(archivePath);
