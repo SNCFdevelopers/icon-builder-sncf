@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 const archiver = require('archiver');
+const copyfiles = require('copyfiles');
 const fs = require('fs');
+const path = require('path');
+const replace = require('replace-in-file');
+const sharp = require('sharp');
 const webfontsGenerator = require('webfonts-generator');
 
 @Injectable()
@@ -35,7 +39,49 @@ export class ApiService {
     });
   };
 
-  generateWebfont(files: Array<string>, dest: string) {
+  async createPngs(icons, source, dest, size = 200) {
+    for (let index = 0; index < icons.length; index++) {
+      const iconSvg = `${icons[index]}.svg`;
+      const iconPng = `${icons[index]}.png`;
+
+      await sharp(path.join(source, iconSvg))
+        .resize({
+          width: size,
+          height: size,
+          fit: sharp.fit.cover,
+        })
+        .png()
+        .toFile(path.join(dest, iconPng));
+    }
+
+    return;
+  };
+
+  async createSvgs(icons, source, dest, size) {
+    const iconsSrc = icons.map(name => path.join(source, `${name}.svg`));
+    const iconsOutput = icons.map(name => path.join(dest, `${name}.svg`));
+
+    return new Promise((resolve, reject) => {
+      copyfiles([...iconsSrc, dest], true, () => {
+        console.log('Files copied');
+        replace({
+          files: iconsOutput,
+          from: 'viewBox="0 0 500 500"',
+          to: 'viewBox="0 0 200 200"',
+        })
+          .then(results => {
+            console.log('Replacement results:', results);
+            resolve('Replacement success.')
+          })
+          .catch(error => {
+            console.error('Error occurred:', error);
+            reject(`Error occurred: ${error}`);
+          });
+      });
+    });
+  }
+
+  async createWebfont(files: Array<string>, dest: string) {
     return new Promise((resolve, reject) => {
       webfontsGenerator({
         files,
