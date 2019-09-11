@@ -8,6 +8,7 @@
 ## Installation
 
 ```bash
+$ cd app
 $ yarn install
 $ yarn svg
 ```

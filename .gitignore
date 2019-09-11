@@ -1,21 +1,23 @@
 # compiled output
-/dist
-/node_modules
+app/dist
+app/node_modules
+bootstrap-sncf
+assets
 
 # Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+app/logs
+app/*.log
+app/npm-debug.log*
+app/yarn-debug.log*
+app/yarn-error.log*
+app/lerna-debug.log*
 
 # OS
 .DS_Store
 
 # Tests
-/coverage
-/.nyc_output
+app/coverage
+app/.nyc_output
 
 # IDEs and editors
 /.idea

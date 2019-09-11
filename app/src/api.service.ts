@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 const archiver = require('archiver');
 const copyfiles = require('copyfiles');
 const fs = require('fs');
+const git = require('simple-git/promise');
 const path = require('path');
 const replace = require('replace-in-file');
 const sharp = require('sharp');
@@ -80,6 +81,22 @@ export class ApiService {
       });
     });
   };
+
+  async getBootstrapIcon(pathProject, localPath) {
+    return new Promise((resolve, reject) => {
+      git().outputHandler((command, stdout, stderr) => {
+        stdout.pipe(process.stdout)
+        stderr.pipe(process.stderr)
+        stderr.on('data', function (data) {
+        // Print data
+          console.log(data.toString('utf8')) 
+        })
+      }).clone(pathProject, localPath, ['--progress', '--verbose']).then((val) => {
+        console.log('clone done');
+        resolve('clone done');
+      });
+    });
+  }
 
   async replaceColor(icons, source, dest, color) {
     const iconsSrc = icons.map(name => path.join(source, `${name}.svg`));

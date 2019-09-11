@@ -2,12 +2,16 @@
 import { Body, Controller, Get, Header, HttpStatus, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiService } from './api.service';
+const { exec } = require('child_process');
 const fs = require('fs');
+const git = require('simple-git/promise');
 const hash = require('object-hash');
 const path = require('path');
+const rimraf = require('rimraf');
 
-const tmpPath = path.resolve(__dirname, './_tmp');
-const svgPath = path.resolve(__dirname, './assets/svg');
+const rootPath = path.resolve(__dirname, '../..');
+const tmpPath = path.resolve(rootPath, './generate');
+const svgPath = path.resolve(rootPath, './assets');
 
 const ICON_NAMES = ['circle-arrow', 'circle-back-top'];
 const BODY = {
@@ -87,6 +91,25 @@ export class ApiController {
     });
 
     this.apiService.createArchive(stream, destPath);
+    return;
+  }
+
+  @Get('update')
+  async update() {
+    rimraf(tmpPath, {}, () => console.log('tmp folder delete'));
+
+    const pathProject = 'https://github.com/SNCFdevelopers/bootstrap-sncf.git';
+    const assetsPath = path.resolve(rootPath, 'bootstrap-sncf');
+
+    await this.apiService.getBootstrapIcon(pathProject, assetsPath);
+
+    exec(`svgo -f ${assetsPath}/src/assets/icons -o ${svgPath}`, (err, result) => {
+      console.log(result);
+      rimraf(assetsPath, {}, () => {
+        return 'Succefull update.';
+      });
+    });
+
     return;
   }
 }
