@@ -12,11 +12,11 @@ const svgPath = path.resolve(__dirname, './assets/svg');
 const ICON_NAMES = ['circle-arrow', 'circle-back-top'];
 const BODY = {
   icons: ICON_NAMES,
-  font: true,
-  png: true,
-  svg: true,
-  size: 200,
-  color: '#3cff00',
+  withFont: true,
+  withPng: true,
+  withSvg: true,
+  withSize: 200,
+  withColor: '#3cff00',
 };
 
 @Controller('api')
@@ -30,7 +30,7 @@ export class ApiController {
     @Res() res: Response,
   ) {
     const params = BODY;
-    const { icons, font, png, svg, size, color } = params;
+    const { icons, withFont, withPng, withSvg, withSize, withColor } = params;
 
     if (!icons) {
       return;
@@ -39,27 +39,46 @@ export class ApiController {
     const outputPath = path.join(tmpPath, hash(params));
     const destPath = path.join(outputPath, 'src');
     const archivePath = path.join(outputPath, 'icons-sncf.zip');
+    const svgDest = withSvg ? path.join(destPath, 'svg') : path.join(outputPath, 'svg');
+    const directories = [tmpPath, outputPath, destPath];
+    if ((withPng && withColor) || withSvg) { directories.push(svgDest) };
+    this.apiService.createDirectory(directories);
 
     if (fs.existsSync(archivePath)) {
       res.download(archivePath);
       return;
     }
 
-    this.apiService.createDirectory([tmpPath, outputPath, destPath]);
-
-    if (font) {
+    if (withFont) {
       const svgs = icons.map(name => path.join(svgPath, `${name}.svg`));
       await this.apiService.createWebfont(svgs, path.join(destPath, 'font'));
     }
 
-    if (png) {
-      this.apiService.createDirectory([path.join(destPath, 'png')]);
-      await this.apiService.createPngs(icons, svgPath, path.join(destPath, 'png'), size);
+    if ((withPng && withColor) || (withSvg && withColor)) {
+      await this.apiService.replaceColor(icons, svgPath, svgDest, withColor);
     }
 
-    if (svg) {
-      this.apiService.createDirectory([path.join(destPath, 'svg')]);
-      await this.apiService.createSvgs(icons, svgPath, path.join(destPath, 'svg'), size, color);
+    if (withPng) {
+      const pngDest = path.join(destPath, 'png');
+      this.apiService.createDirectory([pngDest]);
+      await this.apiService.createPngs(icons, withColor ? svgDest : svgPath, pngDest, withSize);
+    }
+
+    if (withSvg) {
+      if (!withColor) {
+        await this.apiService.copySvgs(
+          icons.map(name => path.join(svgPath, `${name}.svg`)),
+          svgDest
+        );
+      }
+
+      if (withSize) {
+        const iconsOutput = icons.map(name => path.join(withColor ? svgDest : svgPath, `${name}.svg`));
+        await this.apiService.resizeSvgs(
+          icons.map(name => path.join(withColor ? svgDest : svgPath, `${name}.svg`)),
+          withSize,
+        );
+      }
     }
 
     const stream = fs.createWriteStream(archivePath);

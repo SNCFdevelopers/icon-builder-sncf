@@ -9,6 +9,15 @@ const webfontsGenerator = require('webfonts-generator');
 
 @Injectable()
 export class ApiService {
+  async copySvgs(icons, dest) {
+    return new Promise((resolve, reject) => {
+      copyfiles([...icons, dest], true, () => {
+        console.log('Files copied');
+        resolve('Files copied');
+      });
+    });
+  }
+
   createArchive(output: any, directoryPath: string) {
     var archive = archiver('zip', {
       zlib: { level: 9 }
@@ -57,30 +66,6 @@ export class ApiService {
     return;
   };
 
-  async createSvgs(icons, source, dest, size, color) {
-    const iconsSrc = icons.map(name => path.join(source, `${name}.svg`));
-    const iconsOutput = icons.map(name => path.join(dest, `${name}.svg`));
-
-    return new Promise((resolve, reject) => {
-      copyfiles([...iconsSrc, dest], true, () => {
-        console.log('Files copied');
-        replace({
-          files: iconsOutput,
-          from: [/<svg/g, /fill="#0088ce"/g],
-          to: [`<svg width="${size}" height="${size}"`, `fill="${color}"`],
-        })
-          .then(results => {
-            console.log('Replacement results:', results);
-            resolve('Replacement success.')
-          })
-          .catch(error => {
-            console.error('Error occurred:', error);
-            reject(`Error occurred: ${error}`);
-          });
-      });
-    });
-  }
-
   async createWebfont(files: Array<string>, dest: string) {
     return new Promise((resolve, reject) => {
       webfontsGenerator({
@@ -95,4 +80,39 @@ export class ApiService {
       });
     });
   };
+
+  async replaceColor(icons, source, dest, color) {
+    const iconsSrc = icons.map(name => path.join(source, `${name}.svg`));
+    const iconsOutput = icons.map(name => path.join(dest, `${name}.svg`));
+
+    return new Promise((resolve, reject) => {
+      copyfiles([...iconsSrc, dest], true, () => {
+        replace({
+          files: iconsOutput,
+          from: /fill="#0088ce"/g,
+          to: `fill="${color}"`,
+        })
+          .then(results => {
+            resolve('Replacement success.')
+          })
+          .catch(error => {
+            reject(`Error occurred: ${error}`);
+          });
+      });
+    });
+  }
+
+  async resizeSvgs(icons, size) {
+    try {
+      const results = await replace({
+        files: icons,
+        from: /<svg/g,
+        to: `<svg width="${size}" height="${size}"`,
+      });
+      console.log('Replacement results:', results);
+    }
+    catch (error) {
+      console.error('Error occurred:', error);
+    }
+  }
 }
