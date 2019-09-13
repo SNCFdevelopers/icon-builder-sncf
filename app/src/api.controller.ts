@@ -6,6 +6,7 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const git = require('simple-git/promise');
 const hash = require('object-hash');
+var ncp = require('ncp').ncp;
 const path = require('path');
 const rimraf = require('rimraf');
 
@@ -123,8 +124,11 @@ export class ApiController {
 
     await this.apiService.getBootstrapIcon(pathProject, assetsPath);
 
-    exec(`svgo -f ${assetsPath}/src/assets/icons -o ${svgPath}`, (err, result) => {
-      console.log(result);
+    ncp(`${assetsPath}/src/assets/icons`, svgPath, function (err) {
+      if (err) {
+        return console.error(err);
+      }
+
       rimraf(assetsPath, {}, () => {
         return 'Succefull update.';
       });
