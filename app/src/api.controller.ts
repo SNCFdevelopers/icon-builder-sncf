@@ -1,5 +1,5 @@
 
-import { Body, Controller, Get, Header, HttpStatus, Param, Res } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiService } from './api.service';
 const { exec } = require('child_process');
@@ -12,44 +12,64 @@ const rimraf = require('rimraf');
 const rootPath = path.resolve(__dirname, '../..');
 const tmpPath = path.resolve(rootPath, './generate');
 const svgPath = path.resolve(rootPath, './assets');
+const archiveName = 'icons-sncf.zip';
 
-const ICON_NAMES = ['circle-arrow', 'circle-back-top'];
-const BODY = {
-  icons: ICON_NAMES,
-  withFont: true,
-  withPng: true,
-  withSvg: true,
-  withSize: 200,
-  withColor: '#3cff00',
-};
+class DownloadDto {
+  readonly icons: any;
+  readonly withFont: boolean;
+  readonly withPng: boolean;
+  readonly withSvg: boolean;
+  readonly withSize: number;
+  readonly withColor: string;
+  get name(): any { return this.icons }
+}
 
 @Controller('api')
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
 
-  @Get('download')
-  @Header('Content-type', 'application/json')
-  async findAll(
-    @Body() body,
+  @Get('download/:id')
+  async findArchive(
+    @Param() param,
     @Res() res: Response,
   ) {
-    const params = BODY;
-    const { icons, withFont, withPng, withSvg, withSize, withColor } = params;
+    const outputPath = path.join(tmpPath, param.id);
+    const archivePath = path.join(outputPath, 'icons-sncf.zip');
+
+    if (fs.existsSync(archivePath)) {
+      res.download(archivePath, archiveName, function (err) {
+        if (err) {
+          // Handle error, but keep in mind the response may be partially-sent
+          // so check res.headersSent
+          console.log('err: ', err);
+        } else {
+          // decrement a download credit, etc.
+          console.log('download');
+        }
+      })
+    }
+  }
+
+  @Post('download')
+  @Header('Content-type', 'application/json')
+  async findAll(@Res() res: Response, @Body() body: DownloadDto) {
+    const { icons, withFont, withPng, withSvg, withSize, withColor } = body;
 
     if (!icons) {
       return;
     }
 
-    const outputPath = path.join(tmpPath, hash(params));
+    const id = hash(body);
+    const outputPath = path.join(tmpPath, id);
     const destPath = path.join(outputPath, 'src');
-    const archivePath = path.join(outputPath, 'icons-sncf.zip');
+    const archivePath = path.join(outputPath, archiveName);
     const svgDest = withSvg ? path.join(destPath, 'svg') : path.join(outputPath, 'svg');
     const directories = [tmpPath, outputPath, destPath];
     if ((withPng && withColor) || withSvg) { directories.push(svgDest) };
     this.apiService.createDirectory(directories);
 
     if (fs.existsSync(archivePath)) {
-      res.download(archivePath);
+      res.status(HttpStatus.OK).json(id);
       return;
     }
 
@@ -77,7 +97,6 @@ export class ApiController {
       }
 
       if (withSize) {
-        const iconsOutput = icons.map(name => path.join(withColor ? svgDest : svgPath, `${name}.svg`));
         await this.apiService.resizeSvgs(
           icons.map(name => path.join(withColor ? svgDest : svgPath, `${name}.svg`)),
           withSize,
@@ -87,7 +106,8 @@ export class ApiController {
 
     const stream = fs.createWriteStream(archivePath);
     stream.on('close', function() {
-      res.download(archivePath);
+      res.status(HttpStatus.OK).json(id);
+      return;
     });
 
     this.apiService.createArchive(stream, destPath);

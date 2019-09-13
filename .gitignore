@@ -3,6 +3,7 @@ app/dist
 app/node_modules
 bootstrap-sncf
 assets
+generate
 
 # Logs
 app/logs

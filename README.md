@@ -4,6 +4,7 @@
 
 - `yarn 1.17.3`
 - `node v10.15.3`
+- `git 2.16.2`
 
 ## Installation
 

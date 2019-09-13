@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import * as rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   await app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
