@@ -1,24 +1,24 @@
 # compiled output
-app/dist
-app/node_modules
+application/dist
+application/node_modules
 bootstrap-sncf
 assets
 generate
 
 # Logs
-app/logs
-app/*.log
-app/npm-debug.log*
-app/yarn-debug.log*
-app/yarn-error.log*
-app/lerna-debug.log*
+application/logs
+application/*.log
+application/npm-debug.log*
+application/yarn-debug.log*
+application/yarn-error.log*
+application/lerna-debug.log*
 
 # OS
 .DS_Store
 
 # Tests
-app/coverage
-app/.nyc_output
+application/coverage
+application/.nyc_output
 
 # IDEs and editors
 /.idea
